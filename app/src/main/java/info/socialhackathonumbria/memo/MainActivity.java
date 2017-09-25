@@ -9,7 +9,7 @@ import android.widget.Button;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_VOICE_ROCGNITION = 1;
 
     @Override
@@ -17,27 +17,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button button = (Button)findViewById(R.id.button);
-        button.setText("Apri Activity");
-        button.setOnClickListener(this);
-
-        //button.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View view) {
-        //        startVoiceRecognition();
-        //    }
-        //});
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.button:
-                //startDetailsActivity();
-                startVoiceRecognition();
-                //findViewById(R.id.button).setEnabled(false);
-                break;
-        }
     }
 
     @Override
