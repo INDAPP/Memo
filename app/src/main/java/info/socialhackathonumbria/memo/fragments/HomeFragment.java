@@ -6,12 +6,17 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import info.socialhackathonumbria.memo.R;
+import info.socialhackathonumbria.memo.adpters.MessagesAdapter;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -19,7 +24,9 @@ import info.socialhackathonumbria.memo.R;
 public class HomeFragment extends Fragment implements View.OnClickListener {
     OnHomeFragmentInteractionListener listener;
 
-    TextView mTextView;
+    RecyclerView mRecyclerView;
+    RecyclerView.LayoutManager mLayoutManager;
+    MessagesAdapter mAdapter;
 
     public HomeFragment() {}
 
@@ -34,7 +41,14 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         view.findViewById(R.id.fab).setOnClickListener(this);
-        mTextView = (TextView)view.findViewById(R.id.textView);
+        mRecyclerView = (RecyclerView)view.findViewById(R.id.recyclerView);
+
+        mLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        String[] messages = listener != null ? listener.getMessages() : new String[0];
+        mAdapter = new MessagesAdapter(messages);
+
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
@@ -52,13 +66,14 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public void setMessage(String message) {
-        if (mTextView != null) {
-            mTextView.setText(message);
+    public void updateMessages(String[] messages) {
+        if (mAdapter != null) {
+            mAdapter.update(messages);
         }
     }
 
     public interface OnHomeFragmentInteractionListener {
         void onFabClick(View view);
+        String[] getMessages();
     }
 }
