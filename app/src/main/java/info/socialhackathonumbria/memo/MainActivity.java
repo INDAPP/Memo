@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity
     implements BottomNavigationView.OnNavigationItemSelectedListener,
         HomeFragment.OnHomeFragmentInteractionListener {
     private final static int REQUEST_VOICE_RECOGNITION = 1;
-    private List<String> results = new LinkedList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,9 +43,7 @@ public class MainActivity extends AppCompatActivity
                 if (resultCode == RESULT_OK) {
                     List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String myMessage = results.get(0);
-                    //startDetailsActivity(myMessage);
-                    this.results.add(myMessage);
-                    setupHomeFragment();
+                    addNoteToList(myMessage);
                 }
                 break;
         }
@@ -66,12 +63,11 @@ public class MainActivity extends AppCompatActivity
         startActivityForResult(intent, REQUEST_VOICE_RECOGNITION);
     }
 
-    private void setupHomeFragment() {
+    private void addNoteToList(String text) {
         Fragment fragment = getSupportFragmentManager().findFragmentByTag("home");
         if (fragment != null && fragment instanceof HomeFragment) {
             HomeFragment homeFragment = (HomeFragment)fragment;
-            String[] messages = this.results.toArray(new String[this.results.size()]);
-            homeFragment.updateMessages(messages);
+            homeFragment.mAdapter.add(text);
         }
     }
 
@@ -99,15 +95,5 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFabClick(View view) {
         startVoiceRecognition();
-    }
-
-    @Override
-    public String[] getMessages() {
-//        return new String[] {
-//                "Frase di prova 1",
-//                "Frase di prova 2",
-//                "Altra frase di prova più lunga del normale"
-//        };
-        return results.toArray(new String[results.size()]);
     }
 }

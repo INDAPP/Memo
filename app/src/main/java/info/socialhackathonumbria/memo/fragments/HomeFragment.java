@@ -4,16 +4,12 @@ package info.socialhackathonumbria.memo.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adpters.MessagesAdapter;
@@ -26,7 +22,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
     RecyclerView mRecyclerView;
     RecyclerView.LayoutManager mLayoutManager;
-    MessagesAdapter mAdapter;
+    public MessagesAdapter mAdapter;
 
     public HomeFragment() {}
 
@@ -44,8 +40,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         mRecyclerView = (RecyclerView)view.findViewById(R.id.recyclerView);
 
         mLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        String[] messages = listener != null ? listener.getMessages() : new String[0];
-        mAdapter = new MessagesAdapter(messages);
+        mAdapter = new MessagesAdapter();
 
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
@@ -66,14 +61,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public void updateMessages(String[] messages) {
-        if (mAdapter != null) {
-            mAdapter.update(messages);
-        }
-    }
-
     public interface OnHomeFragmentInteractionListener {
         void onFabClick(View view);
-        String[] getMessages();
     }
 }
