@@ -12,10 +12,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import info.socialhackathonumbria.memo.fragments.DetailsFragment;
+import info.socialhackathonumbria.memo.fragments.NewsFragment;
 import info.socialhackathonumbria.memo.fragments.HomeFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -79,7 +78,7 @@ public class MainActivity extends AppCompatActivity
                 replaceFragment(new HomeFragment(), "home");
                 break;
             case R.id.menu_second:
-                replaceFragment(new DetailsFragment(), "details");
+                replaceFragment(new NewsFragment(), "details");
                 break;
         }
         return true;

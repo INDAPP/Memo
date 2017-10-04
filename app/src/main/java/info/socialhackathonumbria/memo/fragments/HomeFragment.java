@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adpters.MessagesAdapter;
+import info.socialhackathonumbria.memo.client.Client;
 
 /**
  * A simple {@link Fragment} subclass.
