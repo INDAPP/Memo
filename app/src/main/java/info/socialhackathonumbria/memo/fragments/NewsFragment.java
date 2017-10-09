@@ -2,10 +2,13 @@ package info.socialhackathonumbria.memo.fragments;
 
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -20,6 +23,8 @@ import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adapters.NewsAdapter;
 import info.socialhackathonumbria.memo.client.Client;
 import info.socialhackathonumbria.memo.models.ArticlesResponse;
+import info.socialhackathonumbria.memo.models.Source;
+import info.socialhackathonumbria.memo.models.SourcesResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,11 +32,15 @@ import retrofit2.Response;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class NewsFragment extends Fragment {
+public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
+        View.OnClickListener {
     public RecyclerView recyclerView;
+    public SwipeRefreshLayout refreshLayout;
     public ProgressBar progressView;
     public NewsAdapter mAdapter;
     public RecyclerView.LayoutManager mLayoutManager;
+
+    private String lastSource;
 
     public NewsFragment() {
         // Required empty public constructor
@@ -49,7 +58,9 @@ public class NewsFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         recyclerView = view.findViewById(R.id.recyclerView);
+        refreshLayout = view.findViewById(R.id.swipeRefresh);
         progressView = view.findViewById(R.id.progressBar);
+        view.findViewById(R.id.fab).setOnClickListener(this);
 
         mAdapter = new NewsAdapter();
         mLayoutManager = new LinearLayoutManager(getContext());
@@ -59,19 +70,33 @@ public class NewsFragment extends Fragment {
 
         recyclerView.addItemDecoration(new SimpleDecorator());
 
-        update();
+        refreshLayout.setOnRefreshListener(this);
+
+        onRefresh();
     }
 
-    private void update() {
+    @Override
+    public void onRefresh() {
+        if (lastSource != null)
+            update(lastSource);
+        else
+            selectSource();
+    }
+
+    private void update(String source) {
+        lastSource = source;
         Client.shared.endpoints
-                .articles("hacker-news", Client.API_KEY)
+                .articles(source, Client.API_KEY)
                 .enqueue(new Callback<ArticlesResponse>() {
                     @Override
                     public void onResponse(Call<ArticlesResponse> call,
                                            Response<ArticlesResponse> response) {
                         progressView.setVisibility(View.GONE);
+                        refreshLayout.setRefreshing(false);
                         if(response.isSuccessful() && response.body() != null) {
                             mAdapter.update(response.body().articles);
+                        } else {
+                            showMessage("Impossibile recuperare le news");
                         }
                     }
 
@@ -79,12 +104,69 @@ public class NewsFragment extends Fragment {
                     public void onFailure(Call<ArticlesResponse> call,
                                           Throwable t) {
                         progressView.setVisibility(View.GONE);
-                        Context ctx = getContext();
-                        if (ctx != null)
-                            Toast.makeText(ctx, "Errore durante la richiesta", Toast.LENGTH_SHORT)
-                                    .show();
+                        refreshLayout.setRefreshing(false);
+                        showMessage("Errore durante la richiesta");
                     }
                 });
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.fab:
+                selectSource();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void selectSource() {
+        Client.shared.endpoints.sources()
+                .enqueue(new Callback<SourcesResponse>() {
+                    @Override
+                    public void onResponse(Call<SourcesResponse> call,
+                                           Response<SourcesResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            showSourcesDialog(response.body().sources);
+                        } else {
+                            showMessage("Impossibile recuperare le fonti");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<SourcesResponse> call, Throwable t) {
+                        showMessage("Impossibile recuperare le fonti");
+                    }
+                });
+    }
+
+    public void showSourcesDialog(final Source[] sources) {
+        Context ctx = getContext();
+        if (ctx != null) {
+            CharSequence[] items = new CharSequence[sources.length];
+            for (int i=0; i<sources.length; i++) items[i] = sources[i].name;
+            new AlertDialog.Builder(ctx)
+                    .setTitle("Fonti")
+//                    .setMessage("Seleziona una fonte di notizie")
+                    .setItems(items, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            mAdapter.update(null);
+                            progressView.setVisibility(View.VISIBLE);
+                            Source source = sources[i];
+                            update(source.id);
+                        }
+                    })
+                    .show();
+        }
+    }
+
+    public void showMessage(String message) {
+        Context ctx = getContext();
+        if (ctx != null)
+            Toast.makeText(ctx, message, Toast.LENGTH_SHORT)
+                    .show();
     }
 
     private class SimpleDecorator extends RecyclerView.ItemDecoration {
