@@ -2,11 +2,14 @@ package info.socialhackathonumbria.memo.fragments;
 
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import info.socialhackathonumbria.memo.R;
-import info.socialhackathonumbria.memo.adpters.NewsAdapter;
+import info.socialhackathonumbria.memo.adapters.NewsAdapter;
 import info.socialhackathonumbria.memo.client.Client;
 import info.socialhackathonumbria.memo.models.ArticlesResponse;
 import retrofit2.Call;
@@ -54,6 +57,8 @@ public class NewsFragment extends Fragment {
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(mLayoutManager);
 
+        recyclerView.addItemDecoration(new SimpleDecorator());
+
         update();
     }
 
@@ -80,5 +85,18 @@ public class NewsFragment extends Fragment {
                                     .show();
                     }
                 });
+    }
+
+    private class SimpleDecorator extends RecyclerView.ItemDecoration {
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            int position = parent.getChildAdapterPosition(view);
+            if (position > 0) {
+                DisplayMetrics metrics = view.getContext().getResources().getDisplayMetrics();
+                outRect.top = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, metrics);
+            } else {
+                outRect.top = 0;
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-package info.socialhackathonumbria.memo.adpters;
+package info.socialhackathonumbria.memo.adapters;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;

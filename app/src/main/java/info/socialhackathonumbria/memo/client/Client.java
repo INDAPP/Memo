@@ -2,6 +2,7 @@ package info.socialhackathonumbria.memo.client;
 
 import com.squareup.moshi.Moshi;
 
+import info.socialhackathonumbria.memo.adapters.DateAdapter;
 import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
@@ -18,6 +19,7 @@ public class Client {
 
     private Client() {
         Moshi moshi = new Moshi.Builder()
+                .add(new DateAdapter())
                 .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)

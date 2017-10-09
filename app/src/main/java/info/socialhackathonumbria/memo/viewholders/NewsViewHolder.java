@@ -5,6 +5,11 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.models.News;
 
@@ -13,11 +18,16 @@ import info.socialhackathonumbria.memo.models.News;
  */
 
 public class NewsViewHolder extends RecyclerView.ViewHolder {
+    final static DateFormat FORMATTER;
+    static {
+        FORMATTER = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
+    }
 
     public TextView textTitle;
     public ImageView imageView;
     public TextView textDescription;
     public TextView textAuthor;
+    public TextView textDate;
 
     public NewsViewHolder(View itemView) {
         super(itemView);
@@ -25,6 +35,7 @@ public class NewsViewHolder extends RecyclerView.ViewHolder {
         this.imageView = itemView.findViewById(R.id.imageView);
         this.textDescription = itemView.findViewById(R.id.textDescription);
         this.textAuthor = itemView.findViewById(R.id.textAuthor);
+        this.textDate = itemView.findViewById(R.id.textDate);
     }
 
     public void bind(News news)
@@ -32,7 +43,8 @@ public class NewsViewHolder extends RecyclerView.ViewHolder {
         textTitle.setText(news.title);
         textDescription.setText(news.description);
         textAuthor.setText(news.author);
-        //TODO: mettere l'immagine
+        Picasso.with(imageView.getContext()).load(news.urlToImage).into(imageView);
+        textDate.setText(news.publishedAt != null ? FORMATTER.format(news.publishedAt) : null);
     }
 
 
