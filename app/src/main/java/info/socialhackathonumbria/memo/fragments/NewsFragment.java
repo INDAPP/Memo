@@ -28,8 +28,11 @@ import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adapters.NewsAdapter;
 import info.socialhackathonumbria.memo.client.Client;
 import info.socialhackathonumbria.memo.models.ArticlesResponse;
+import info.socialhackathonumbria.memo.models.News;
 import info.socialhackathonumbria.memo.models.Source;
 import info.socialhackathonumbria.memo.models.SourcesResponse;
+import info.socialhackathonumbria.memo.services.FetchService;
+import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -77,11 +80,8 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         progressView = view.findViewById(R.id.progressBar);
         view.findViewById(R.id.fab).setOnClickListener(this);
 
-        mAdapter = new NewsAdapter(this);
-
         mLayoutManager = new LinearLayoutManager(getContext());
 
-        recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(mLayoutManager);
 
         recyclerView.addItemDecoration(new SimpleDecorator());
@@ -101,29 +101,19 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private void update(String source) {
         setLastSource(source);
-        Client.shared.endpoints
-                .articles(source, Client.API_KEY)
-                .enqueue(new Callback<ArticlesResponse>() {
-                    @Override
-                    public void onResponse(Call<ArticlesResponse> call,
-                                           Response<ArticlesResponse> response) {
-                        progressView.setVisibility(View.GONE);
-                        refreshLayout.setRefreshing(false);
-                        if(response.isSuccessful() && response.body() != null) {
-                            mAdapter.update(response.body().articles);
-                        } else {
-                            showMessage("Impossibile recuperare le news");
-                        }
-                    }
+        if (source != null) {
+            if (mAdapter == null || !source.equals(lastSource)) {
+                mAdapter = new NewsAdapter(
+                        Realm.getDefaultInstance().where(News.class).findAll(),
+                        this
+                );
+                recyclerView.setAdapter(mAdapter);
+            }
+            if (getContext() != null) {
+                FetchService.startArticlesFetch(getContext(), source);
+            }
+        }
 
-                    @Override
-                    public void onFailure(Call<ArticlesResponse> call,
-                                          Throwable t) {
-                        progressView.setVisibility(View.GONE);
-                        refreshLayout.setRefreshing(false);
-                        showMessage("Errore durante la richiesta");
-                    }
-                });
     }
 
     private void setLastSource(String source) {
@@ -188,8 +178,6 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                     .setItems(items, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            mAdapter.update(null);
-                            progressView.setVisibility(View.VISIBLE);
                             Source source = sources[i];
                             update(source.id);
                         }

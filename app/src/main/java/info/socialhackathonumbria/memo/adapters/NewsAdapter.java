@@ -8,18 +8,18 @@ import android.view.ViewGroup;
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.models.News;
 import info.socialhackathonumbria.memo.viewholders.NewsViewHolder;
+import io.realm.RealmRecyclerViewAdapter;
+import io.realm.RealmResults;
 
 /**
  * Created by LuckySeven srl on 04/10/2017.
  */
 
-public class NewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
-    private News[] news;
+public class NewsAdapter extends RealmRecyclerViewAdapter<News, NewsViewHolder> {
     private View.OnClickListener mClickListener;
 
-    public NewsAdapter(View.OnClickListener listener){
-        super();
-
+    public NewsAdapter(RealmResults<News> news, View.OnClickListener listener){
+        super(news, true, true);
         mClickListener = listener;
     }
 
@@ -36,23 +36,10 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
 
     @Override
     public void onBindViewHolder(NewsViewHolder holder, int position) {
-        holder.bind(news[position]);
-    }
-
-
-
-    @Override
-    public int getItemCount() {
-        return news != null ? news.length : 0;
-    }
-
-    public void update(News[] news) {
-        this.news = news;
-        notifyDataSetChanged();
-
+        holder.bind(getItem(position));
     }
 
     public String getUrl(int position) {
-        return news[position].url;
+        return getItem(position).url;
     }
 }

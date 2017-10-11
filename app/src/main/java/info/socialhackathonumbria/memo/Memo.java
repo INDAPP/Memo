@@ -6,6 +6,7 @@ import android.content.res.TypedArray;
 import android.util.TypedValue;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 
 /**
  * Created by LuckySeven srl on 02/10/2017.
@@ -17,6 +18,10 @@ public class Memo extends Application {
     public void onCreate() {
         super.onCreate();
         Realm.init(this);
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .deleteRealmIfMigrationNeeded()
+                .build();
+        Realm.setDefaultConfiguration(config);
     }
 
     public static int getPrimaryColor(Context ctx) {
