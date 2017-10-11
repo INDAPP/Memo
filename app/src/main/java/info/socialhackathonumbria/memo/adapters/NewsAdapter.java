@@ -15,12 +15,22 @@ import info.socialhackathonumbria.memo.viewholders.NewsViewHolder;
 
 public class NewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
     private News[] news;
+    private View.OnClickListener mClickListener;
+
+    public NewsAdapter(View.OnClickListener listener){
+        super();
+
+        mClickListener = listener;
+    }
 
     @Override
     public NewsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
         View view = layoutInflater.inflate(R.layout.view_holder_news,parent,false);
         NewsViewHolder newsViewHolder = new NewsViewHolder(view);
+
+        view.setOnClickListener(mClickListener);
+
         return newsViewHolder;
     }
 
@@ -28,6 +38,8 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
     public void onBindViewHolder(NewsViewHolder holder, int position) {
         holder.bind(news[position]);
     }
+
+
 
     @Override
     public int getItemCount() {
@@ -38,5 +50,9 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
         this.news = news;
         notifyDataSetChanged();
 
+    }
+
+    public String getUrl(int position) {
+        return news[position].url;
     }
 }

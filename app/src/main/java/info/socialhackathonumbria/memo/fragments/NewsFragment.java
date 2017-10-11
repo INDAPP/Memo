@@ -3,9 +3,12 @@ package info.socialhackathonumbria.memo.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +22,8 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import info.socialhackathonumbria.memo.BuildConfig;
+import info.socialhackathonumbria.memo.Memo;
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adapters.NewsAdapter;
 import info.socialhackathonumbria.memo.client.Client;
@@ -34,6 +39,8 @@ import retrofit2.Response;
  */
 public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
         View.OnClickListener {
+    public static final String PREFS_SOURCE = "source";
+
     public RecyclerView recyclerView;
     public SwipeRefreshLayout refreshLayout;
     public ProgressBar progressView;
@@ -46,6 +53,14 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         // Required empty public constructor
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        SharedPreferences prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID,
+                Context.MODE_PRIVATE);
+        lastSource = prefs.getString(PREFS_SOURCE, null);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,7 +77,8 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         progressView = view.findViewById(R.id.progressBar);
         view.findViewById(R.id.fab).setOnClickListener(this);
 
-        mAdapter = new NewsAdapter();
+        mAdapter = new NewsAdapter(this);
+
         mLayoutManager = new LinearLayoutManager(getContext());
 
         recyclerView.setAdapter(mAdapter);
@@ -84,7 +100,7 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private void update(String source) {
-        lastSource = source;
+        setLastSource(source);
         Client.shared.endpoints
                 .articles(source, Client.API_KEY)
                 .enqueue(new Callback<ArticlesResponse>() {
@@ -110,6 +126,15 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 });
     }
 
+    private void setLastSource(String source) {
+        lastSource = source;
+        if (getContext() != null) {
+            SharedPreferences prefs = getContext().getSharedPreferences(BuildConfig.APPLICATION_ID,
+                    Context.MODE_PRIVATE);
+            prefs.edit().putString(PREFS_SOURCE, source).apply();
+        }
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -117,8 +142,19 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 selectSource();
                 break;
             default:
+                int position = recyclerView.getChildAdapterPosition(view);
+                if (position != RecyclerView.NO_POSITION) onItemClick(position);
                 break;
         }
+    }
+
+    private void onItemClick(int position) {
+        String url = mAdapter.getUrl(position);
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        CustomTabsIntent customTabsIntent = builder
+                .setToolbarColor(Memo.getPrimaryColor(getContext()))
+                .build();
+        customTabsIntent.launchUrl(getContext(), Uri.parse(url));
     }
 
     public void selectSource() {
