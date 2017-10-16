@@ -17,4 +17,5 @@ public class News extends RealmObject {
     public @PrimaryKey String url;
     public String urlToImage;
     public @DateFormatted Date publishedAt;
+    public String source;
 }

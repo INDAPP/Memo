@@ -11,14 +11,20 @@ import java.util.List;
 import info.socialhackathonumbria.memo.client.Client;
 import info.socialhackathonumbria.memo.models.ArticlesResponse;
 import info.socialhackathonumbria.memo.models.News;
+import info.socialhackathonumbria.memo.models.Source;
+import info.socialhackathonumbria.memo.models.SourcesResponse;
 import io.realm.Realm;
 import retrofit2.Response;
 
 public class FetchService extends IntentService implements Realm.Transaction {
     private static final String ACTION_FETCH_ARTICLES = "info.socialhackathonumbria.memo.services.action.FETCH_ARTICLES";
     private static final String EXTRA_SOURCE = "info.socialhackathonumbria.memo.services.extra.SOURCE";
+    public static final String ACTION_FETCH_ARTICLES_COMPLETED = "info.socialhackathonumbria.memo.services.action.ACTION_FETCH_ARTICLES_COMPLETED";
+    public static final String ACTION_FETCH_SOURCES_COMPLETED = "info.socialhackathonumbria.memo.services.action.ACTION_FETCH_SOURCES_COMPLETED";
+    private static final String ACTION_FETCH_RESOURCES = "info.socialhackathonumbria.memo.services.action.FETCH_RESOURCES";
 
-    private ArticlesResponse mResponse;
+    private ArticlesResponse mArticlesResponse;
+    private SourcesResponse mSourcesResponse;
 
     public FetchService() {
         super("FetchService");
@@ -28,6 +34,12 @@ public class FetchService extends IntentService implements Realm.Transaction {
         Intent intent = new Intent(context, FetchService.class);
         intent.setAction(ACTION_FETCH_ARTICLES);
         intent.putExtra(EXTRA_SOURCE, source);
+        context.startService(intent);
+    }
+
+    public static void startSourcesFetch(Context context) {
+        Intent intent = new Intent(context, FetchService.class);
+        intent.setAction(ACTION_FETCH_RESOURCES);
         context.startService(intent);
     }
 
@@ -41,6 +53,9 @@ public class FetchService extends IntentService implements Realm.Transaction {
                     final String source = intent.getStringExtra(EXTRA_SOURCE);
                     handleArticlesFetch(source);
                     break;
+                case ACTION_FETCH_RESOURCES:
+                    handleSourcesFetch();
+                    break;
             }
         }
     }
@@ -53,10 +68,12 @@ public class FetchService extends IntentService implements Realm.Transaction {
                 if (response.isSuccessful()
                         && response.body() != null
                         && response.body().articles.length > 0) {
-                    mResponse = response.body();
+                    mArticlesResponse = response.body();
                     Realm realm = Realm.getDefaultInstance();
                     realm.executeTransaction(this);
                     realm.close();
+                    Intent intent = new Intent(ACTION_FETCH_ARTICLES_COMPLETED);
+                    sendBroadcast(intent);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -64,9 +81,37 @@ public class FetchService extends IntentService implements Realm.Transaction {
         }
     }
 
+    private void handleSourcesFetch() {
+        try {
+            Response<SourcesResponse> response =
+                    Client.shared.endpoints.sources().execute();
+            if (response.isSuccessful()
+                    && response.body() != null
+                    && response.body().sources.length > 0) {
+                mSourcesResponse = response.body();
+                Realm realm = Realm.getDefaultInstance();
+                realm.executeTransaction(this);
+                realm.close();
+
+                Intent intent = new Intent(ACTION_FETCH_SOURCES_COMPLETED);
+                sendBroadcast(intent);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void execute(Realm realm) {
-        List<News> newsList = Arrays.asList(mResponse.articles);
-        realm.insertOrUpdate(newsList);
+        if (mArticlesResponse != null) {
+
+            List<News> newsList = Arrays.asList(mArticlesResponse.articles);
+            for (News n : newsList) n.source = mArticlesResponse.source;
+            realm.insertOrUpdate(newsList);
+        }
+        if (mSourcesResponse != null) {
+            List<Source> sourcesList = Arrays.asList(mSourcesResponse.sources);
+            realm.insertOrUpdate(sourcesList);
+        }
     }
 }

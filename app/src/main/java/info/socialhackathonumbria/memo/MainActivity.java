@@ -22,16 +22,20 @@ public class MainActivity extends AppCompatActivity
         HomeFragment.OnHomeFragmentInteractionListener {
     private final static int REQUEST_VOICE_RECOGNITION = 1;
 
+    BottomNavigationView navigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BottomNavigationView navigationView =
+        navigationView =
                 (BottomNavigationView)findViewById(R.id.bottomNavigation);
         navigationView.setOnNavigationItemSelectedListener(this);
 
-        replaceFragment(new HomeFragment(), "home");
+        if (savedInstanceState == null) {
+            setFragment(R.id.menu_first);
+        }
     }
 
     @Override
@@ -47,6 +51,19 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        int id = navigationView.getSelectedItemId();
+        setFragment(id);
     }
 
     private void startDetailsActivity(String message) {
@@ -73,6 +90,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+        setFragment(id);
+        return true;
+    }
+
+    private void setFragment(int id) {
         switch (id) {
             case R.id.menu_first:
                 replaceFragment(new HomeFragment(), "home");
@@ -81,7 +103,6 @@ public class MainActivity extends AppCompatActivity
                 replaceFragment(new NewsFragment(), "details");
                 break;
         }
-        return true;
     }
 
     private void replaceFragment(Fragment fragment, String tag) {

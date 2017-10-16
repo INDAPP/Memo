@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.TypedValue;
 
+import info.socialhackathonumbria.memo.services.FetchService;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
@@ -22,6 +23,8 @@ public class Memo extends Application {
                 .deleteRealmIfMigrationNeeded()
                 .build();
         Realm.setDefaultConfiguration(config);
+
+        FetchService.startSourcesFetch(this);
     }
 
     public static int getPrimaryColor(Context ctx) {

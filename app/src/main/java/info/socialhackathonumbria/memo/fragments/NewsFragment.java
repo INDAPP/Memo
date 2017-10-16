@@ -1,8 +1,11 @@
 package info.socialhackathonumbria.memo.fragments;
 
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -22,12 +25,13 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.List;
+
 import info.socialhackathonumbria.memo.BuildConfig;
 import info.socialhackathonumbria.memo.Memo;
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adapters.NewsAdapter;
 import info.socialhackathonumbria.memo.client.Client;
-import info.socialhackathonumbria.memo.models.ArticlesResponse;
 import info.socialhackathonumbria.memo.models.News;
 import info.socialhackathonumbria.memo.models.Source;
 import info.socialhackathonumbria.memo.models.SourcesResponse;
@@ -51,9 +55,16 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     public RecyclerView.LayoutManager mLayoutManager;
 
     private String lastSource;
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (refreshLayout != null) refreshLayout.setRefreshing(false);
+        }
+    };
 
     public NewsFragment() {
         // Required empty public constructor
+
     }
 
     @Override
@@ -63,6 +74,15 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         SharedPreferences prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID,
                 Context.MODE_PRIVATE);
         lastSource = prefs.getString(PREFS_SOURCE, null);
+
+        context.registerReceiver(mReceiver, new IntentFilter(FetchService.ACTION_FETCH_ARTICLES_COMPLETED));
+    }
+
+    @Override
+    public void onDetach() {
+        if (getContext() != null)
+            getContext().unregisterReceiver(mReceiver);
+        super.onDetach();
     }
 
     @Override
@@ -100,11 +120,13 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private void update(String source) {
-        setLastSource(source);
         if (source != null) {
             if (mAdapter == null || !source.equals(lastSource)) {
                 mAdapter = new NewsAdapter(
-                        Realm.getDefaultInstance().where(News.class).findAll(),
+                        Realm.getDefaultInstance()
+                                .where(News.class)
+                                .equalTo("source", source)
+                                .findAll(),
                         this
                 );
                 recyclerView.setAdapter(mAdapter);
@@ -113,7 +135,7 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 FetchService.startArticlesFetch(getContext(), source);
             }
         }
-
+        setLastSource(source);
     }
 
     private void setLastSource(String source) {
@@ -148,37 +170,27 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     public void selectSource() {
-        Client.shared.endpoints.sources()
-                .enqueue(new Callback<SourcesResponse>() {
-                    @Override
-                    public void onResponse(Call<SourcesResponse> call,
-                                           Response<SourcesResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            showSourcesDialog(response.body().sources);
-                        } else {
-                            showMessage("Impossibile recuperare le fonti");
-                        }
-                    }
+        //showSourcesDialog(response.body().sources);
+        Realm realm = Realm.getDefaultInstance();
+        if(realm.where(Source.class).count()>0) {
+           showSourcesDialog(realm.where(Source.class).findAll());
+        } else {
 
-                    @Override
-                    public void onFailure(Call<SourcesResponse> call, Throwable t) {
-                        showMessage("Impossibile recuperare le fonti");
-                    }
-                });
+        };
     }
 
-    public void showSourcesDialog(final Source[] sources) {
+    public void showSourcesDialog(final List<Source> sources) {
         Context ctx = getContext();
         if (ctx != null) {
-            CharSequence[] items = new CharSequence[sources.length];
-            for (int i=0; i<sources.length; i++) items[i] = sources[i].name;
+            CharSequence[] items = new CharSequence[sources.size()];
+            for (int i=0; i<sources.size(); i++) items[i] = sources.get(i).name;
             new AlertDialog.Builder(ctx)
                     .setTitle("Fonti")
 //                    .setMessage("Seleziona una fonte di notizie")
                     .setItems(items, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            Source source = sources[i];
+                            Source source = sources.get(i);
                             update(source.id);
                         }
                     })
