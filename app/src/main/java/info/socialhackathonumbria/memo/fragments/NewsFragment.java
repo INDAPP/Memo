@@ -31,15 +31,10 @@ import info.socialhackathonumbria.memo.BuildConfig;
 import info.socialhackathonumbria.memo.Memo;
 import info.socialhackathonumbria.memo.R;
 import info.socialhackathonumbria.memo.adapters.NewsAdapter;
-import info.socialhackathonumbria.memo.client.Client;
 import info.socialhackathonumbria.memo.models.News;
 import info.socialhackathonumbria.memo.models.Source;
-import info.socialhackathonumbria.memo.models.SourcesResponse;
 import info.socialhackathonumbria.memo.services.FetchService;
 import io.realm.Realm;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,10 +50,17 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     public RecyclerView.LayoutManager mLayoutManager;
 
     private String lastSource;
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mArticlesReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (refreshLayout != null) refreshLayout.setRefreshing(false);
+        }
+    };
+    private BroadcastReceiver mSourcesReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            selectSource();
+            context.unregisterReceiver(this);
         }
     };
 
@@ -75,13 +77,13 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 Context.MODE_PRIVATE);
         lastSource = prefs.getString(PREFS_SOURCE, null);
 
-        context.registerReceiver(mReceiver, new IntentFilter(FetchService.ACTION_FETCH_ARTICLES_COMPLETED));
+        context.registerReceiver(mArticlesReceiver, new IntentFilter(FetchService.ACTION_FETCH_ARTICLES_COMPLETED));
     }
 
     @Override
     public void onDetach() {
         if (getContext() != null)
-            getContext().unregisterReceiver(mReceiver);
+            getContext().unregisterReceiver(mArticlesReceiver);
         super.onDetach();
     }
 
@@ -174,7 +176,10 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         Realm realm = Realm.getDefaultInstance();
         if(realm.where(Source.class).count()>0) {
            showSourcesDialog(realm.where(Source.class).findAll());
-        } else {
+        } else if(getContext() != null){
+            FetchService.startSourcesFetch(getContext());
+            getContext().registerReceiver(mSourcesReceiver,
+                    new IntentFilter(FetchService.ACTION_FETCH_SOURCES_COMPLETED));
 
         };
     }
