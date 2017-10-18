@@ -23,7 +23,11 @@
 
         <service
             android:name=".services.FetchService"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCt3eRt-AVFD_ZfFP99naNwHaotm_6t8tY"/>
     </application>
 
 </manifest>

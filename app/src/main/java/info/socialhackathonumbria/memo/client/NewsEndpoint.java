@@ -10,7 +10,7 @@ import retrofit2.http.Query;
  * Created by LuckySeven srl on 04/10/2017.
  */
 
-public interface Endpoints {
+public interface NewsEndpoint {
 
     @GET("articles")
     public Call<ArticlesResponse> articles(

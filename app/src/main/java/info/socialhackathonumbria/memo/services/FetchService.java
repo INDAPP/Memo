@@ -64,7 +64,7 @@ public class FetchService extends IntentService implements Realm.Transaction {
         if (source != null) {
             try {
                 Response<ArticlesResponse> response =
-                        Client.shared.endpoints.articles(source, Client.API_KEY).execute();
+                        Client.sharedNews.endpoints.articles(source, Client.API_KEY).execute();
                 if (response.isSuccessful()
                         && response.body() != null
                         && response.body().articles.length > 0) {
@@ -84,7 +84,7 @@ public class FetchService extends IntentService implements Realm.Transaction {
     private void handleSourcesFetch() {
         try {
             Response<SourcesResponse> response =
-                    Client.shared.endpoints.sources().execute();
+                    Client.sharedNews.endpoints.sources().execute();
             if (response.isSuccessful()
                     && response.body() != null
                     && response.body().sources.length > 0) {
@@ -104,7 +104,6 @@ public class FetchService extends IntentService implements Realm.Transaction {
     @Override
     public void execute(Realm realm) {
         if (mArticlesResponse != null) {
-
             List<News> newsList = Arrays.asList(mArticlesResponse.articles);
             for (News n : newsList) n.source = mArticlesResponse.source;
             realm.insertOrUpdate(newsList);

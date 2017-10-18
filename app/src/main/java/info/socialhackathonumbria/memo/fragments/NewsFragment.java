@@ -175,7 +175,8 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         //showSourcesDialog(response.body().sources);
         Realm realm = Realm.getDefaultInstance();
         if(realm.where(Source.class).count()>0) {
-           showSourcesDialog(realm.where(Source.class).findAll());
+           showSourcesDialog(realm.where(Source.class).findAll(),
+                   realm.where(News.class).findAll());
         } else if(getContext() != null){
             FetchService.startSourcesFetch(getContext());
             getContext().registerReceiver(mSourcesReceiver,
@@ -184,11 +185,20 @@ public class NewsFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         };
     }
 
-    public void showSourcesDialog(final List<Source> sources) {
+    public void showSourcesDialog(final List<Source> sources, final List<News> news) {
         Context ctx = getContext();
         if (ctx != null) {
             CharSequence[] items = new CharSequence[sources.size()];
-            for (int i=0; i<sources.size(); i++) items[i] = sources.get(i).name;
+            for (int i=0; i<sources.size(); i++) {
+                Source source = sources.get(i);
+                String name = source.name;
+                int count = 0;
+                for(News n : news)
+                    if (source.id.equals(n.source))
+                        count++;
+                name += " (" + count + ")";
+                items[i] = name;
+            }
             new AlertDialog.Builder(ctx)
                     .setTitle("Fonti")
 //                    .setMessage("Seleziona una fonte di notizie")

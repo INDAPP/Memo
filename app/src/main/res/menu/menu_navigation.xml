@@ -8,4 +8,8 @@
         android:id="@+id/menu_second"
         android:title="Details"
         android:icon="@drawable/ic_event"/>
+    <item
+        android:id="@+id/menu_third"
+        android:title="GoogleMaps"
+        android:icon="@drawable/ic_map"/>
 </menu>

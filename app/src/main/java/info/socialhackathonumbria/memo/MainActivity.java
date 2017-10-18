@@ -14,6 +14,7 @@ import android.view.View;
 
 import java.util.List;
 
+import info.socialhackathonumbria.memo.fragments.GoogleMapsFragment;
 import info.socialhackathonumbria.memo.fragments.NewsFragment;
 import info.socialhackathonumbria.memo.fragments.HomeFragment;
 
@@ -101,6 +102,9 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.menu_second:
                 replaceFragment(new NewsFragment(), "details");
+                break;
+            case R.id.menu_third:
+                replaceFragment(new GoogleMapsFragment(), "maps");
                 break;
         }
     }
