@@ -64,8 +64,8 @@ public class GoogleMapsFragment extends SupportMapFragment
         if (response.isSuccessful() && map != null) {
             for (Feature feature : response.body().features) {
                 LatLng coordinates = new LatLng(
-                        feature.geometry.coordinates[0],
-                        feature.geometry.coordinates[1]);
+                        feature.geometry.coordinates[1],
+                        feature.geometry.coordinates[0]);
                 map.addMarker(new MarkerOptions()
                         .position(coordinates)
                         .title("Magnitudo " + feature.properties.mag)
